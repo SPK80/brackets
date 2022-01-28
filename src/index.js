@@ -1,8 +1,5 @@
-function isOpening(bracket, bracketsGroup, stack, index) {
-	if (isUnary(bracketsGroup))
-		return (stack.length == 0 || stack[stack.length - 1] != index);
-	else
-		return bracket == bracketsGroup[0];
+function isOpeningBinary(bracket, bracketsGroup) {
+	return bracket == bracketsGroup[0];
 }
 
 function bracketsIndex(bracket, bracketsConfig) {
@@ -13,17 +10,29 @@ function isUnary(bracketsGroup) {
 	return bracketsGroup[0] === bracketsGroup[1];
 }
 
+function isOpeningUnary(stack, groupIndex) {
+	return (stack.length == 0 || stack[stack.length - 1] != groupIndex);
+}
+
 module.exports = function check(str, bracketsConfig) {
 	const stack = [];
-	const result = [...str].find(bracket => {
-		const index = bracketsIndex(bracket, bracketsConfig);
-		if (isOpening(bracket, bracketsConfig[index], stack, index)) {
-			stack.push(index);
+
+	const notCorrect = [...str].find(bracket => {
+		const groupIndex = bracketsIndex(bracket, bracketsConfig);
+		const bracketsGroup = bracketsConfig[groupIndex];
+
+		let isOpeningBracket;
+		if (isUnary(bracketsGroup)) isOpeningBracket = isOpeningUnary(stack, groupIndex)
+		else isOpeningBracket = isOpeningBinary(bracket, bracketsGroup);
+
+		if (isOpeningBracket) {
+			stack.push(groupIndex);
 			return false;
 		}
 		else
-			return (index !== stack.pop());
+			return (groupIndex !== stack.pop());
+
 	});
-	if (stack.length != 0) return false;
-	return !result;
+
+	return stack.length == 0 && !notCorrect;
 }
